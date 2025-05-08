@@ -1,0 +1,37 @@
+.grupo-card {
+    margin-bottom: 2rem;
+    border: 2px solid #dee2e6;
+}
+
+.grupo-header {
+    background-color: #e9ecef !important;
+}
+
+.badge-responsavel {
+    font-size: 0.8em;
+    vertical-align: middle;
+}
+.btn-action {
+    min-width: 38px;
+    transition: all 0.3s ease;
+}
+.btn-action:hover {
+    transform: scale(1.1);
+}
+
+.total-box {
+    border: 1px solid #dee2e6;
+    min-width: 150px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.table td {
+    vertical-align: middle;
+}
+.text-danger {
+    color: #dc3545 !important;
+}
+.text-warning {
+    color: #fd7e14 !important;
+}
