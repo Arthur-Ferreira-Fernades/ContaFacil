@@ -33,21 +33,37 @@ if (!$despesa) {
 
 // Processar formulário de edição
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
     $titulo = $_POST['titulo'];
     $valor_total = (float) str_replace(['R$', '.', ','], ['', '', '.'], $_POST['valor_total']);
     $data_vencimento = $_POST['data_vencimento'];
     $pagador_id = $_POST['pagador_id'];
+
+// Garantir que a data é válida
+if (!strtotime($data_vencimento)) {
+    $erro = "Data de vencimento inválida!";
+} else {
+    $dia_vencimento = (int) date('d', strtotime($data_vencimento));
     
     $sql_update = "UPDATE despesas SET 
                   titulo = ?,
                   valor_total = ?,
                   data_vencimento = ?,
-                  dia_vencimento = DAY(?),
+                  dia_vencimento = ?,
                   pagador_id = ?
                   WHERE id = ? AND grupo_id = ?";
     
     $stmt = $conexao->prepare($sql_update);
-    $stmt->bind_param('sdsiiii', $titulo, $valor_total, $data_vencimento, $data_vencimento, $pagador_id, $despesa_id, $grupo_id);
+    $stmt->bind_param('sdsiiii', $titulo, $valor_total, $data_vencimento, $dia_vencimento, $pagador_id, $despesa_id, $grupo_id);
+
+    if ($stmt->execute()) {
+        header("Location: index.php?sucesso=Despesa+atualizada+com+sucesso");
+        exit;
+    } else {
+        $erro = "Erro ao atualizar despesa: " . $conexao->error;
+    }
+}
+
     
     if ($stmt->execute()) {
         header("Location: index.php?sucesso=Despesa+atualizada+com+sucesso");
@@ -59,9 +75,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Buscar membros do grupo para o select de pagador
 $sql_membros = "SELECT u.id, u.nome_completo 
-               FROM grupo_membros gm
-               JOIN usuarios u ON gm.usuario_id = u.id
-               WHERE gm.grupo_id = ?";
+FROM grupo_membros gm
+JOIN usuarios u ON gm.usuario_id = u.id
+WHERE gm.grupo_id = ?";
+
 $stmt = $conexao->prepare($sql_membros);
 $stmt->bind_param('i', $grupo_id);
 $stmt->execute();
@@ -75,24 +92,7 @@ $membros = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     <title>Editar Despesa - ContaFácil</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        .card-edicao {
-            max-width: 600px;
-            margin: 2rem auto;
-        }
-        .money-input {
-            position: relative;
-        }
-        .money-input span {
-            position: absolute;
-            left: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-        .money-input input {
-            padding-left: 30px;
-        }
-    </style>
+    <link rel="stylesheet" href="styles/editar_despesa.css">
 </head>
 <body class="bg-light">
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">

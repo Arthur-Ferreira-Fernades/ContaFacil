@@ -1,0 +1,16 @@
+.card-edicao {
+    max-width: 600px;
+    margin: 2rem auto;
+}
+.money-input {
+    position: relative;
+}
+.money-input span {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+.money-input input {
+    padding-left: 30px;
+}

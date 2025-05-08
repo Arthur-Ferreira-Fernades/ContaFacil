@@ -54,11 +54,6 @@ try {
 
     if ($tipo === 'variavel') {
         $data_vencimento = $_POST['data_vencimento'];
-        $data_atual = date('Y-m-d');
-        
-        if ($data_vencimento < $data_atual) {
-            throw new Exception("Data de vencimento não pode ser no passado!");
-        }
     }
 
     // Inserir despesa principal

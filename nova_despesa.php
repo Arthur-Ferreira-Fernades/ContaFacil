@@ -93,7 +93,7 @@ try {
                 <div class="mb-3" id="campoData" style="display: none;">
                     <label class="form-label">Data de Vencimento</label>
                     <input type="date" name="data_vencimento"
-                        class="form-control" min="<?= date('Y-m-d') ?>">
+                        class="form-control">
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Pagador</label>
