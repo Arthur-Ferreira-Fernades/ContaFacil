@@ -133,13 +133,23 @@ try {
         <?php foreach ($grupos_completos as $grupo): ?>
         <div class="card grupo-card">
             <div class="card-header bg-primary text-white">
-                <h4>
-                    <i class="fas fa-users-cog me-2"></i>
-                    <?= htmlspecialchars($grupo['info']['nome_grupo']) ?>
-                    <?php if ($grupo['info']['responsavel_id'] == $usuario_id): ?>
-                        <span class="responsavel-badge badge bg-warning">Responsável</span>
-                    <?php endif; ?>
-                </h4>
+            <div class="d-flex justify-content-between align-items-center">
+    <h4 class="mb-0">
+        <i class="fas fa-users-cog me-2"></i>
+        <?= htmlspecialchars($grupo['info']['nome_grupo']) ?>
+        <?php if ($grupo['info']['responsavel_id'] == $usuario_id): ?>
+            <span class="responsavel-badge badge bg-warning">Responsável</span>
+        <?php endif; ?>
+    </h4>
+
+    <?php if ($grupo['info']['responsavel_id'] == $usuario_id): ?>
+        <a href="scripts/excluir_grupo.php?grupo_id=<?= $grupo['info']['id'] ?>"
+           class="btn btn-sm btn-danger"
+           onclick="return confirm('Tem certeza que deseja excluir este grupo? Essa ação não poderá ser desfeita.')">
+            <i class="fas fa-trash-alt me-1"></i>Excluir Grupo
+        </a>
+    <?php endif; ?>
+</div>
             </div>
 
             <!-- Seção de Solicitações Pendentes -->

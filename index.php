@@ -6,6 +6,26 @@ if (!estaLogado()) {
 }
 require_once 'scripts/conectaBanco.php';
 
+$meses = [
+    'January' => 'Janeiro',
+    'February' => 'Fevereiro',
+    'March' => 'Março',
+    'April' => 'Abril',
+    'May' => 'Maio',
+    'June' => 'Junho',
+    'July' => 'Julho',
+    'August' => 'Agosto',
+    'September' => 'Setembro',
+    'October' => 'Outubro',
+    'November' => 'Novembro',
+    'December' => 'Dezembro'
+];
+
+$mes_en = (new DateTime())->format('F');
+$ano = (new DateTime())->format('Y');
+
+
+
 // Verifica se há mensagens de sucesso/erro
 $sucesso = $_GET['sucesso'] ?? null;
 $erro = $_GET['erro'] ?? null;
@@ -97,7 +117,7 @@ try {
             + array_sum(array_column($despesas_variaveis, 'valor_total'));
         $total_gastos += $total_grupo;
         $total_variaveis = array_sum(array_column($despesas_variaveis, 'valor_total'));
-        $total_gastos += $total_variaveis;
+
 
         // Armazenar dados do grupo
         $todos_grupos[] = [
@@ -149,6 +169,9 @@ try {
                         <li class="nav-item">
                             <a class="nav-link" href="historico_pagamentos.php">Histórico</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="edita_perfil.php">Editar Perfil</a>
+                        </li>
                     </ul>
                     <div class="d-flex">
                         <?php if (estaLogado()): ?>
@@ -199,53 +222,53 @@ try {
 
                 <div class="card-body">
                     <div class="row">
-                    <div class="col-md-6">
-    <div class="card mb-4">
-        <div class="card-header">
-            <h5><i class="fas fa-users me-2"></i>Membros e Gastos</h5>
-        </div>
-        <div class="card-body">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Membro</th>
-                        <th>Fixos (R$)</th>
-                        <th>Variados (R$)</th>
-                        <th>Falta Pagar (R$)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php 
-                    // Calcular gastos por membro
-                    $gastos_membros = [];
-                    $mes_atual = date('Y-m-01');
-                    
-                    foreach ($membros as $membro) {
-                        // Gastos variados
-                        $sql_variaveis = "SELECT COALESCE(SUM(valor_total), 0) as total
+                        <div class="col-md-6">
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-users me-2"></i>Membros e Gastos</h5>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Membro</th>
+                                                <th>Fixos (R$)</th>
+                                                <th>Variados (R$)</th>
+                                                <th>Falta Pagar (R$)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php
+                                            // Calcular gastos por membro
+                                            $gastos_membros = [];
+                                            $mes_atual = date('Y-m-01');
+
+                                            foreach ($membros as $membro) {
+                                                // Gastos variados
+                                                $sql_variaveis = "SELECT COALESCE(SUM(valor_total), 0) as total
                                          FROM despesas 
                                          WHERE grupo_id = ? 
                                          AND pagador_id = ?
                                          AND tipo = 'variavel'
                                          AND MONTH(data_vencimento) = MONTH(CURRENT_DATE())";
-                        $stmt = $conexao->prepare($sql_variaveis);
-                        $stmt->bind_param('ii', $grupo_id, $membro['id']);
-                        $stmt->execute();
-                        $total_variaveis = $stmt->get_result()->fetch_assoc()['total'];
-                        
-                        // Gastos fixos
-                        $sql_fixas = "SELECT COALESCE(SUM(valor_total), 0) as total
+                                                $stmt = $conexao->prepare($sql_variaveis);
+                                                $stmt->bind_param('ii', $grupo_id, $membro['id']);
+                                                $stmt->execute();
+                                                $total_variaveis = $stmt->get_result()->fetch_assoc()['total'];
+
+                                                // Gastos fixos
+                                                $sql_fixas = "SELECT COALESCE(SUM(valor_total), 0) as total
                                      FROM despesas 
                                      WHERE grupo_id = ? 
                                      AND pagador_id = ?
                                      AND tipo = 'fixa'";
-                        $stmt = $conexao->prepare($sql_fixas);
-                        $stmt->bind_param('ii', $grupo_id, $membro['id']);
-                        $stmt->execute();
-                        $total_fixas = $stmt->get_result()->fetch_assoc()['total'];
-                        
-                        // Falta pagar (fixas não pagas deste mês)
-                        $sql_pendente = "SELECT COALESCE(SUM(d.valor_total), 0) as total
+                                                $stmt = $conexao->prepare($sql_fixas);
+                                                $stmt->bind_param('ii', $grupo_id, $membro['id']);
+                                                $stmt->execute();
+                                                $total_fixas = $stmt->get_result()->fetch_assoc()['total'];
+
+                                                // Falta pagar (fixas não pagas deste mês)
+                                                $sql_pendente = "SELECT COALESCE(SUM(d.valor_total), 0) as total
                                         FROM despesas d
                                         LEFT JOIN pagamentos p ON p.despesa_id = d.id
                                             AND p.mes_referencia = ?
@@ -253,44 +276,44 @@ try {
                                         AND d.pagador_id = ?
                                         AND d.tipo = 'fixa'
                                         AND p.id IS NULL";
-                        $stmt = $conexao->prepare($sql_pendente);
-                        $stmt->bind_param('sii', $mes_atual, $grupo_id, $membro['id']);
-                        $stmt->execute();
-                        $falta_pagar = $stmt->get_result()->fetch_assoc()['total'];
-                        
-                        $gastos_membros[] = [
-                            'nome' => $membro['nome_completo'],
-                            'fixos' => $total_fixas,
-                            'variados' => $total_variaveis,
-                            'pendente' => $falta_pagar
-                        ];
-                    }
-                    
-                    // Exibir na tabela
-                    foreach ($gastos_membros as $membro): ?>
-                    <tr>
-                        <td><?= htmlspecialchars($membro['nome']) ?></td>
-                        <td class="<?= $membro['fixos'] > 0 ? 'text-danger fw-bold' : '' ?>">
-                            <?= number_format($membro['fixos'], 2) ?>
-                        </td>
-                        <td class="<?= $membro['variados'] > 0 ? 'text-warning fw-bold' : '' ?>">
-                            <?= number_format($membro['variados'], 2) ?>
-                        </td>
-                        <td class="<?= $membro['pendente'] > 0 ? 'text-danger fw-bold' : '' ?>">
-                            <?= number_format($membro['pendente'], 2) ?>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>            
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
+                                                $stmt = $conexao->prepare($sql_pendente);
+                                                $stmt->bind_param('sii', $mes_atual, $grupo_id, $membro['id']);
+                                                $stmt->execute();
+                                                $falta_pagar = $stmt->get_result()->fetch_assoc()['total'];
+
+                                                $gastos_membros[] = [
+                                                    'nome' => $membro['nome_completo'],
+                                                    'fixos' => $total_fixas,
+                                                    'variados' => $total_variaveis,
+                                                    'pendente' => $falta_pagar
+                                                ];
+                                            }
+
+                                            // Exibir na tabela
+                                            foreach ($gastos_membros as $membro): ?>
+                                                <tr>
+                                                    <td><?= htmlspecialchars($membro['nome']) ?></td>
+                                                    <td class="<?= $membro['fixos'] > 0 ? 'text-danger fw-bold' : '' ?>">
+                                                        <?= number_format($membro['fixos'], 2) ?>
+                                                    </td>
+                                                    <td class="<?= $membro['variados'] > 0 ? 'text-warning fw-bold' : '' ?>">
+                                                        <?= number_format($membro['variados'], 2) ?>
+                                                    </td>
+                                                    <td class="<?= $membro['pendente'] > 0 ? 'text-danger fw-bold' : '' ?>">
+                                                        <?= number_format($membro['pendente'], 2) ?>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
 
                         <div class="col-md-6">
                             <div class="card">
                                 <div class="card-header">
-                                    <h5>Despesas Fixas - <?= date('F Y') ?></h5>
+                                    <h5>Despesas Fixas - <?php echo "{$meses[$mes_en]} {$ano}"; ?></h5>
                                     <div class="d-flex justify-content-between small mt-2">
                                         <?php
                                         $total_fixas = array_sum(array_column($grupo['fixas'], 'valor_total'));

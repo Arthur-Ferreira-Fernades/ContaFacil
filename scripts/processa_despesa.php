@@ -16,11 +16,9 @@ try {
         }
     }
 
-    // Coletar dados básicos
     $tipo = $_POST['tipo'];
     $pagador_id = (int)$_POST['pagador_id'];
     $valor_total = (float)$_POST['valor_total'];
-    require __DIR__ . '/autenticacao.php';
     $usuario_id = $_SESSION['usuario_id'];
 
     $stmt_grupo = $conexao->prepare("SELECT grupo_id FROM grupo_membros WHERE usuario_id = ? LIMIT 1");
@@ -35,7 +33,6 @@ try {
     $grupo = $resultado->fetch_assoc();
     $grupo_id = $grupo['grupo_id'];
 
-    // Processar datas
     $dia_vencimento = null;
     $data_vencimento = null;
 
@@ -52,11 +49,7 @@ try {
         $data_vencimento = $_POST['data_vencimento'];
     }
 
-    if ($tipo === 'variavel') {
-        $data_vencimento = $_POST['data_vencimento'];
-    }
-
-    // Inserir despesa principal
+    // Inserir despesa
     $stmt = $conexao->prepare("INSERT INTO despesas 
         (grupo_id, tipo, titulo, valor_total, dia_vencimento, data_vencimento, pagador_id)
         VALUES (?, ?, ?, ?, ?, ?, ?)");
@@ -75,7 +68,20 @@ try {
         throw new Exception("Erro ao salvar despesa: " . $stmt->error);
     }
 
+    $despesa_id = $stmt->insert_id;
     $conexao->commit();
+
+    if ($tipo === 'variavel') {
+        // Envia para o processo de pagamento com formulário oculto
+        echo '<form id="redirectForm" method="POST" action="processa_pagamento.php">
+            <input type="hidden" name="despesa_id" value="' . $despesa_id . '">
+            <input type="hidden" name="grupo_id" value="' . $grupo_id . '">
+            <input type="hidden" name="data_pagamento" value="' . htmlspecialchars($data_vencimento) . '">
+        </form>
+        <script>document.getElementById("redirectForm").submit();</script>';
+        exit;
+    }
+
     header("Location: ../index.php?sucesso=Despesa+registrada+com+sucesso!");
 
 } catch (mysqli_sql_exception $e) {
