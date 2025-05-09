@@ -2,8 +2,8 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1
--- Tempo de geração: 08/05/2025 às 04:06
+-- Host: localhost
+-- Tempo de geração: 09/05/2025 às 03:25
 -- Versão do servidor: 10.4.28-MariaDB
 -- Versão do PHP: 8.0.28
 
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Banco de dados: `contafacil`
+-- Banco de dados: `ContaFacil`
 --
 
 -- --------------------------------------------------------
@@ -44,16 +44,18 @@ CREATE TABLE `despesas` (
 --
 
 INSERT INTO `despesas` (`id`, `grupo_id`, `tipo`, `titulo`, `valor_total`, `dia_vencimento`, `data_vencimento`, `pagador_id`, `data_registro`) VALUES
-(2, 2, 'fixa', 'Luz', 150.00, NULL, '2025-05-25', 3, '2025-05-05 01:12:20'),
+(2, 2, 'fixa', 'Luz', 150.00, 24, '2025-05-24', 3, '2025-05-05 01:12:20'),
 (4, 2, 'fixa', 'Internet', 100.00, 24, '2025-05-24', 3, '2025-05-05 18:42:42'),
 (5, 2, 'fixa', 'Ingles', 250.00, 25, '2025-05-25', 3, '2025-05-05 20:41:59'),
-(6, 2, 'fixa', 'Agua', 85.00, NULL, '2025-05-15', 4, '2025-05-05 20:48:01'),
+(6, 2, 'fixa', 'Agua', 85.00, 15, '2025-05-15', 3, '2025-05-05 20:48:01'),
 (9, 2, 'fixa', 'Netflix', 44.90, 10, '2025-05-10', 3, '2025-05-05 20:50:56'),
 (10, 2, 'fixa', 'Spotify', 11.90, 10, '2025-05-10', 3, '2025-05-05 20:51:10'),
 (11, 2, 'fixa', 'Spotify', 11.90, 10, '2025-05-10', 4, '2025-05-05 20:51:22'),
 (12, 2, 'fixa', 'Anuidade Cartão', 90.80, 10, '2025-05-10', 3, '2025-05-05 20:51:35'),
-(13, 2, 'fixa', 'Telefone', 75.00, NULL, '2025-05-11', 4, '2025-05-05 20:51:51'),
-(16, 2, 'fixa', 'CrunchyRoll', 20.00, 10, '2025-05-10', 3, '2025-05-05 21:07:42');
+(13, 2, 'fixa', 'Telefone', 75.00, 11, '2025-05-11', 4, '2025-05-05 20:51:51'),
+(16, 2, 'fixa', 'CrunchyRoll', 20.00, 10, '2025-05-10', 3, '2025-05-05 21:07:42'),
+(19, 2, 'variavel', 'Standard', 94.00, NULL, '2025-05-06', 4, '2025-05-08 02:33:17'),
+(20, 2, 'variavel', 'Standard', 54.00, NULL, '2025-05-05', 3, '2025-05-08 02:33:31');
 
 -- --------------------------------------------------------
 
@@ -88,8 +90,7 @@ CREATE TABLE `grupos` (
 --
 
 INSERT INTO `grupos` (`id`, `nome_grupo`, `descricao`, `responsavel_id`, `data_criacao`) VALUES
-(2, 'Familia', 'Eu e a sarinha', 3, '2025-05-05 00:33:37'),
-(3, 'Familia 2', '', 4, '2025-05-05 19:32:38');
+(2, 'Familia', 'Eu e a sarinha', 3, '2025-05-05 00:33:37');
 
 -- --------------------------------------------------------
 
@@ -110,8 +111,7 @@ CREATE TABLE `grupo_membros` (
 
 INSERT INTO `grupo_membros` (`grupo_id`, `usuario_id`, `data_adesao`, `is_admin`) VALUES
 (2, 3, '2025-05-05 00:33:37', 1),
-(2, 4, '2025-05-05 19:29:52', 0),
-(3, 4, '2025-05-05 19:32:38', 0);
+(2, 4, '2025-05-05 19:29:52', 0);
 
 -- --------------------------------------------------------
 
@@ -173,7 +173,7 @@ CREATE TABLE `usuarios` (
 --
 
 INSERT INTO `usuarios` (`id`, `nome_completo`, `cpf`, `email`, `senha_hash`, `data_cadastro`, `confirmado`, `token`, `data_expiracao_token`) VALUES
-(3, 'Arthur Ferreira Fernandes', NULL, 'arthurfernandesferreira@hotmail.com', '$2y$10$spV/SqsRSbRkE/H1ejXqpO/5XnqILSot3c8fQwVN9wUuN64ptvnxi', '2025-05-05 00:15:24', 0, NULL, NULL),
+(3, 'Arthur Ferreira Fernandes', NULL, 'arthurfernandesferreira@hotmail.com', '$2y$10$1T6jIr3aX0aIRKlqhk5WE.ShUEdnQkXmm5El1Cz35uOAqDjUf07QC', '2025-05-05 00:15:24', 0, NULL, NULL),
 (4, 'Sarah Alves Moya', NULL, 'sarah@123.com', '$2y$10$malZUhFSga7uQh.VUWYDH.DHVpXO.5yQ.GYAzOKFLMZ0VuZLPv4d6', '2025-05-05 18:46:47', 0, NULL, NULL);
 
 --
@@ -241,7 +241,7 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de tabela `despesas`
 --
 ALTER TABLE `despesas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- AUTO_INCREMENT de tabela `grupos`
@@ -253,7 +253,7 @@ ALTER TABLE `grupos`
 -- AUTO_INCREMENT de tabela `pagamentos`
 --
 ALTER TABLE `pagamentos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT de tabela `solicitacoes_grupo`
