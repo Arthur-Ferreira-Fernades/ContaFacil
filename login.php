@@ -23,7 +23,7 @@ $sucesso = $_GET['sucesso'] ?? null;
         <div class="container-fluid">
             <a class="navbar-brand" href="index.php">ContaFácil</a>
             <div class="d-flex">
-                <a href="register.php" class="btn btn-outline-light">Criar Conta</a>
+                <a href="registra.php" class="btn btn-outline-light">Criar Conta</a>
             </div>
         </div>
     </nav>
@@ -53,10 +53,13 @@ $sucesso = $_GET['sucesso'] ?? null;
                                placeholder="seu@email.com" required>
                     </div>
 
-                    <div class="mb-3">
+                    <div class="mb-3 position-relative">
                         <label class="form-label">Senha</label>
-                        <input type="password" name="senha" class="form-control" 
-                               placeholder="••••••••" required>
+                        <input type="password" name="senha" id="senha" 
+                               class="form-control" placeholder="••••••••" 
+                               required minlength="6">
+                        <i class="password-toggle fas fa-eye-slash" 
+                           onclick="togglePassword('senha')"></i>
                     </div>
 
                     <div class="d-grid gap-2 mb-3">
@@ -80,6 +83,21 @@ $sucesso = $_GET['sucesso'] ?? null;
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Mostrar/esconder senha
+        function togglePassword(fieldId) {
+            const field = document.getElementById(fieldId);
+            const icon = document.querySelector(`[onclick="togglePassword('${fieldId}')"]`);
+            
+            if (field.type === 'password') {
+                field.type = 'text';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            } else {
+                field.type = 'password';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            }
+        }
+    </script>
 </body>
 </html>
 
