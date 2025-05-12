@@ -1,0 +1,18 @@
+# Ativa o mecanismo de reescrita
+RewriteEngine On
+
+# Redireciona automaticamente todo o tráfego para HTTPS
+RewriteCond %{HTTPS} !=on
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Impede listagem de diretórios
+Options -Indexes
+
+# Protege arquivos sensíveis
+<FilesMatch "\.(htaccess|htpasswd|ini|log|sh|sql)">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Define o arquivo inicial
+DirectoryIndex index.php
