@@ -1,0 +1,16 @@
+.admin-actions {
+    white-space: nowrap;
+}
+
+.solicitacao-item {
+    transition: background-color 0.3s;
+}
+
+.grupo-card {
+    margin-bottom: 2rem;
+}
+
+.responsavel-badge {
+    font-size: 0.8rem;
+    vertical-align: middle;
+}
