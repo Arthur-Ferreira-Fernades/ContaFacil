@@ -11,10 +11,12 @@
     font-size: 0.8em;
     vertical-align: middle;
 }
+
 .btn-action {
     min-width: 38px;
     transition: all 0.3s ease;
 }
+
 .btn-action:hover {
     transform: scale(1.1);
 }
@@ -29,10 +31,110 @@
 .table td {
     vertical-align: middle;
 }
+
 .text-danger {
     color: #dc3545 !important;
 }
+
 .text-warning {
     color: #fd7e14 !important;
 }
 
+/* Menu responsivo */
+.navbar-toggler {
+    border: none;
+    padding: 0.5rem;
+}
+
+.navbar-toggler:focus {
+    box-shadow: none;
+}
+
+/* Ajustes para telas pequenas */
+@media (max-width: 992px) {
+    .navbar-collapse {
+        padding-top: 1rem;
+    }
+    
+    .navbar-nav {
+        margin-bottom: 1rem;
+    }
+    
+    .d-flex {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .navbar-text {
+        margin-right: 0 !important;
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* Ajustes para tabelas em mobile */
+@media (max-width: 768px) {
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .grupo-card .row > div {
+        margin-bottom: 1.5rem;
+    }
+    
+    .card-header h5 {
+        font-size: 1.1rem;
+    }
+    
+    .total-box {
+        min-width: 120px;
+        font-size: 0.9rem;
+    }
+    
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.8rem;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+}
+
+/* Melhorias para telas muito pequenas */
+@media (max-width: 576px) {
+    .container {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+    
+    .card {
+        border-radius: 0.5rem;
+    }
+    
+    .grupo-header h4 {
+        font-size: 1.2rem;
+    }
+    
+    .badge-responsavel {
+        font-size: 0.7em;
+    }
+    
+    .table td, .table th {
+        padding: 0.5rem;
+        font-size: 0.85rem;
+    }
+    
+    .btn-action {
+        min-width: 32px;
+        padding: 0.2rem 0.4rem;
+    }
+    
+    h4 {
+        font-size: 1.3rem;
+    }
+    
+    h5 {
+        font-size: 1.1rem;
+    }
+}

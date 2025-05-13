@@ -24,8 +24,6 @@ $meses = [
 $mes_en = (new DateTime())->format('F');
 $ano = (new DateTime())->format('Y');
 
-
-
 // Verifica se há mensagens de sucesso/erro
 $sucesso = $_GET['sucesso'] ?? null;
 $erro = $_GET['erro'] ?? null;
@@ -118,7 +116,6 @@ try {
         $total_gastos += $total_grupo;
         $total_variaveis = array_sum(array_column($despesas_variaveis, 'valor_total'));
 
-
         // Armazenar dados do grupo
         $todos_grupos[] = [
             'info' => $grupo,
@@ -152,8 +149,11 @@ try {
         <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
             <div class="container-fluid">
                 <a class="navbar-brand" href="index.php">ContaFácil</a>
-                <div class="collapse navbar-collapse">
-                    <ul class="navbar-nav me-auto">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarContent">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                         <li class="nav-item">
                             <a class="nav-link" href="index.php">Home</a>
                         </li>
@@ -175,7 +175,7 @@ try {
                     </ul>
                     <div class="d-flex">
                         <?php if (estaLogado()): ?>
-                            <span class="navbar-text me-3">
+                            <span class="navbar-text me-3 d-none d-lg-inline">
                                 Olá, <?= htmlspecialchars($_SESSION['usuario_nome'] ?? 'Usuário') ?>
                             </span>
                             <a href="scripts/logout.php" class="btn btn-outline-light">Sair</a>
@@ -209,109 +209,110 @@ try {
         </div>
 
         <?php foreach ($todos_grupos as $grupo): ?>
-            <div class="card grupo-card">
+            <div class="card grupo-card mb-4">
                 <div class="card-header grupo-header">
                     <h4>
                         <?= htmlspecialchars($grupo['info']['nome_grupo']) ?>
                         <?php if ($grupo['info']['responsavel_id'] == $usuario_id): ?>
                             <span class="badge bg-warning badge-responsavel">Responsável</span>
                         <?php endif; ?>
-                        <span class="float-end">Total do Grupo: R$ <?= number_format($grupo['total_grupo'], 2) ?></span>
+                        <span class="float-end">Total: R$ <?= number_format($grupo['total_grupo'], 2) ?></span>
                     </h4>
                 </div>
 
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-6">
-                            <div class="card mb-4">
+                        <div class="col-md-6 col-12 mb-3">
+                            <div class="card h-100">
                                 <div class="card-header">
                                     <h5><i class="fas fa-users me-2"></i>Membros e Gastos</h5>
                                 </div>
                                 <div class="card-body">
-                                    <table class="table table-striped">
-                                        <thead>
-                                            <tr>
-                                                <th>Membro</th>
-                                                <th>Fixos (R$)</th>
-                                                <th>Variados (R$)</th>
-                                                <th>Falta Pagar (R$)</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php
-                                            // Calcular gastos por membro
-                                            $gastos_membros = [];
-                                            $mes_atual = date('Y-m-01');
+                                    <div class="table-responsive">
+                                        <table class="table table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>Membro</th>
+                                                    <th>Fixos</th>
+                                                    <th>Variados</th>
+                                                    <th>Pendente</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php
+                                                $gastos_membros = [];
+                                                $mes_atual = date('Y-m-01');
+                                                $grupo_id = $grupo['info']['grupo_id'];
 
-                                            foreach ($membros as $membro) {
-                                                // Gastos variados
-                                                $sql_variaveis = "SELECT COALESCE(SUM(valor_total), 0) as total
+                                                foreach ($membros as $membro) {
+                                                    // Gastos variados
+                                                    $sql_variaveis = "SELECT COALESCE(SUM(valor_total), 0) as total
+                                             FROM despesas 
+                                             WHERE grupo_id = ? 
+                                             AND pagador_id = ?
+                                             AND tipo = 'variavel'
+                                             AND MONTH(data_vencimento) = MONTH(CURRENT_DATE())";
+                                                    $stmt = $conexao->prepare($sql_variaveis);
+                                                    $stmt->bind_param('ii', $grupo_id, $membro['id']);
+                                                    $stmt->execute();
+                                                    $total_variaveis = $stmt->get_result()->fetch_assoc()['total'];
+
+                                                    // Gastos fixos
+                                                    $sql_fixas = "SELECT COALESCE(SUM(valor_total), 0) as total
                                          FROM despesas 
                                          WHERE grupo_id = ? 
                                          AND pagador_id = ?
-                                         AND tipo = 'variavel'
-                                         AND MONTH(data_vencimento) = MONTH(CURRENT_DATE())";
-                                                $stmt = $conexao->prepare($sql_variaveis);
-                                                $stmt->bind_param('ii', $grupo_id, $membro['id']);
-                                                $stmt->execute();
-                                                $total_variaveis = $stmt->get_result()->fetch_assoc()['total'];
+                                         AND tipo = 'fixa'";
+                                                    $stmt = $conexao->prepare($sql_fixas);
+                                                    $stmt->bind_param('ii', $grupo_id, $membro['id']);
+                                                    $stmt->execute();
+                                                    $total_fixas = $stmt->get_result()->fetch_assoc()['total'];
 
-                                                // Gastos fixos
-                                                $sql_fixas = "SELECT COALESCE(SUM(valor_total), 0) as total
-                                     FROM despesas 
-                                     WHERE grupo_id = ? 
-                                     AND pagador_id = ?
-                                     AND tipo = 'fixa'";
-                                                $stmt = $conexao->prepare($sql_fixas);
-                                                $stmt->bind_param('ii', $grupo_id, $membro['id']);
-                                                $stmt->execute();
-                                                $total_fixas = $stmt->get_result()->fetch_assoc()['total'];
+                                                    // Falta pagar (fixas não pagas deste mês)
+                                                    $sql_pendente = "SELECT COALESCE(SUM(d.valor_total), 0) as total
+                                            FROM despesas d
+                                            LEFT JOIN pagamentos p ON p.despesa_id = d.id
+                                                AND p.mes_referencia = ?
+                                            WHERE d.grupo_id = ?
+                                            AND d.pagador_id = ?
+                                            AND d.tipo = 'fixa'
+                                            AND p.id IS NULL";
+                                                    $stmt = $conexao->prepare($sql_pendente);
+                                                    $stmt->bind_param('sii', $mes_atual, $grupo_id, $membro['id']);
+                                                    $stmt->execute();
+                                                    $falta_pagar = $stmt->get_result()->fetch_assoc()['total'];
 
-                                                // Falta pagar (fixas não pagas deste mês)
-                                                $sql_pendente = "SELECT COALESCE(SUM(d.valor_total), 0) as total
-                                        FROM despesas d
-                                        LEFT JOIN pagamentos p ON p.despesa_id = d.id
-                                            AND p.mes_referencia = ?
-                                        WHERE d.grupo_id = ?
-                                        AND d.pagador_id = ?
-                                        AND d.tipo = 'fixa'
-                                        AND p.id IS NULL";
-                                                $stmt = $conexao->prepare($sql_pendente);
-                                                $stmt->bind_param('sii', $mes_atual, $grupo_id, $membro['id']);
-                                                $stmt->execute();
-                                                $falta_pagar = $stmt->get_result()->fetch_assoc()['total'];
+                                                    $gastos_membros[] = [
+                                                        'nome' => $membro['nome_completo'],
+                                                        'fixos' => $total_fixas,
+                                                        'variados' => $total_variaveis,
+                                                        'pendente' => $falta_pagar
+                                                    ];
+                                                }
 
-                                                $gastos_membros[] = [
-                                                    'nome' => $membro['nome_completo'],
-                                                    'fixos' => $total_fixas,
-                                                    'variados' => $total_variaveis,
-                                                    'pendente' => $falta_pagar
-                                                ];
-                                            }
-
-                                            // Exibir na tabela
-                                            foreach ($gastos_membros as $membro): ?>
-                                                <tr>
-                                                    <td><?= htmlspecialchars($membro['nome']) ?></td>
-                                                    <td class="<?= $membro['fixos'] > 0 ? 'text-danger fw-bold' : '' ?>">
-                                                        <?= number_format($membro['fixos'], 2) ?>
-                                                    </td>
-                                                    <td class="<?= $membro['variados'] > 0 ? 'text-warning fw-bold' : '' ?>">
-                                                        <?= number_format($membro['variados'], 2) ?>
-                                                    </td>
-                                                    <td class="<?= $membro['pendente'] > 0 ? 'text-danger fw-bold' : '' ?>">
-                                                        <?= number_format($membro['pendente'], 2) ?>
-                                                    </td>
-                                                </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
+                                                foreach ($gastos_membros as $membro): ?>
+                                                    <tr>
+                                                        <td><?= htmlspecialchars($membro['nome']) ?></td>
+                                                        <td class="<?= $membro['fixos'] > 0 ? 'text-danger fw-bold' : '' ?>">
+                                                            <?= number_format($membro['fixos'], 2) ?>
+                                                        </td>
+                                                        <td class="<?= $membro['variados'] > 0 ? 'text-warning fw-bold' : '' ?>">
+                                                            <?= number_format($membro['variados'], 2) ?>
+                                                        </td>
+                                                        <td class="<?= $membro['pendente'] > 0 ? 'text-danger fw-bold' : '' ?>">
+                                                            <?= number_format($membro['pendente'], 2) ?>
+                                                        </td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="col-md-6">
-                            <div class="card">
+                        <div class="col-md-6 col-12">
+                            <div class="card h-100">
                                 <div class="card-header">
                                     <h5>Despesas Fixas - <?php echo "{$meses[$mes_en]} {$ano}"; ?></h5>
                                     <div class="d-flex justify-content-between small mt-2">
@@ -328,104 +329,116 @@ try {
                                     </div>
                                 </div>
                                 <div class="card-body">
-                                    <table class="table table-striped">
-                                        <thead>
-                                            <tr>
-                                                <th>Descrição</th>
-                                                <th>Valor</th>
-                                                <th>Vencimento</th>
-                                                <th>Status</th>
-                                                <th>Ações</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php foreach ($grupo['fixas'] as $despesa): ?>
-                                                <tr>
-                                                    <td><?= htmlspecialchars($despesa['titulo']) ?></td>
-                                                    <td>R$ <?= number_format($despesa['valor_total'], 2) ?></td>
-                                                    <td>Dia <?= $despesa['dia_vencimento'] ?></td>
-                                                    <td>
-                                                        <span class="badge bg-<?= $despesa['status_pago'] ? 'success' : 'danger' ?>">
-                                                            <?= $despesa['status_pago'] ? 'Pago' : 'Pendente' ?>
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        <?php if ($despesa['status_pago']): ?>
-                                                            <a href="scripts/desfazer_pagamento.php?pagamento_id=<?= $despesa['pagamento_id'] ?>&grupo_id=<?= $grupo['info']['grupo_id'] ?>"
-                                                                class="btn btn-sm btn-danger"
-                                                                title="Desfazer Pagamento"
-                                                                onclick="return confirm('Tem certeza que deseja desfazer este pagamento?')">
-                                                                <i class="fas fa-undo"></i>
-                                                            </a>
-                                                        <?php else: ?>
-                                                            <a href="registra_pagamento.php?id=<?= $despesa['id'] ?>&grupo_id=<?= $grupo['info']['grupo_id'] ?>"
-                                                                class="btn btn-sm btn-warning"
-                                                                title="Registrar Pagamento">
-                                                                <i class="fas fa-money-bill-wave"></i>
-                                                            </a>
-                                                        <?php endif; ?>
-                                                        <a href="editar_despesa.php?id=<?= $despesa['id'] ?>&grupo_id=<?= $grupo['info']['grupo_id'] ?>"
-                                                            class="btn btn-sm btn-primary me-2"
-                                                            title="Editar Despesa">
-                                                            <i class="fas fa-edit"></i>
-                                                        </a>
-                                                        <a href="scripts/excluir_despesa.php?id=<?= $despesa['id'] ?>&grupo_id=<?= $grupo['info']['grupo_id'] ?>"
-                                                            class="btn btn-sm btn-danger"
-                                                            title="Excluir Despesa"
-                                                            onclick="return confirm('Tem certeza que deseja excluir esta despesa?')">
-                                                            <i class="fas fa-trash"></i>
-                                                        </a>
-                                                    </td>
-                                                </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
-                                </div>
+    <div class="table-responsive">
+        <table class="table table-striped table-fixas">
+            <thead>
+                <tr>
+                    <th class="col-descricao">Descrição</th>
+                    <th class="col-valor">Valor</th>
+                    <th class="col-vencimento">Venc.</th>
+                    <th class="col-status">Status</th>
+                    <th class="col-acoes">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($grupo['fixas'] as $despesa): ?>
+                    <tr>
+                        <td class="col-descricao" data-label="Descrição">
+                            <?= htmlspecialchars($despesa['titulo']) ?>
+                        </td>
+                        <td class="col-valor" data-label="Valor">
+                            R$ <?= number_format($despesa['valor_total'], 2) ?>
+                        </td>
+                        <td class="col-vencimento" data-label="Vencimento">
+                            Dia <?= $despesa['dia_vencimento'] ?>
+                        </td>
+                        <td class="col-status" data-label="Status">
+                            <span class="badge bg-<?= $despesa['status_pago'] ? 'success' : 'danger' ?>">
+                                <?= $despesa['status_pago'] ? 'Pago' : 'Pendente' ?>
+                            </span>
+                        </td>
+                        <td class="col-acoes" data-label="Ações">
+                            <div class="btn-group btn-group-sm" role="group">
+                                <?php if ($despesa['status_pago']): ?>
+                                    <a href="scripts/desfazer_pagamento.php?pagamento_id=<?= $despesa['pagamento_id'] ?>&grupo_id=<?= $grupo['info']['grupo_id'] ?>"
+                                       class="btn btn-danger"
+                                       title="Desfazer Pagamento"
+                                       onclick="return confirm('Tem certeza que deseja desfazer este pagamento?')">
+                                        <i class="fas fa-undo"></i>
+                                    </a>
+                                <?php else: ?>
+                                    <a href="registra_pagamento.php?id=<?= $despesa['id'] ?>&grupo_id=<?= $grupo['info']['grupo_id'] ?>"
+                                       class="btn btn-warning"
+                                       title="Registrar Pagamento">
+                                        <i class="fas fa-money-bill-wave"></i>
+                                    </a>
+                                <?php endif; ?>
+                                <a href="editar_despesa.php?id=<?= $despesa['id'] ?>&grupo_id=<?= $grupo['info']['grupo_id'] ?>"
+                                   class="btn btn-primary"
+                                   title="Editar Despesa">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="scripts/excluir_despesa.php?id=<?= $despesa['id'] ?>&grupo_id=<?= $grupo['info']['grupo_id'] ?>"
+                                   class="btn btn-danger"
+                                   title="Excluir Despesa"
+                                   onclick="return confirm('Tem certeza que deseja excluir esta despesa?')">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
                             </div>
                         </div>
                     </div>
 
                     <div class="mt-4">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5><i class="fas fa-receipt me-2"></i>Despesas Variáveis deste Mês</h5>
+                            <h5><i class="fas fa-receipt me-2"></i>Despesas Variáveis</h5>
                             <div class="total-box bg-light p-2 rounded">
                                 <strong>Total: R$ <?= number_format($grupo['total_variaveis'], 2) ?></strong>
                             </div>
                         </div>
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Descrição</th>
-                                    <th>Valor</th>
-                                    <th>Pagador</th>
-                                    <th>Vencimento</th>
-                                    <th>Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($grupo['variaveis'] as $variavel): ?>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
                                     <tr>
-                                        <td><?= htmlspecialchars($variavel['titulo']) ?></td>
-                                        <td>R$ <?= number_format($variavel['valor_total'], 2) ?></td>
-                                        <td><?= htmlspecialchars($variavel['pagador']) ?></td>
-                                        <td><?= date('d/m/Y', strtotime($variavel['data_vencimento'])) ?></td>
-                                        <td>
-                                            <a href="editar_despesa.php?id=<?= $variavel['id'] ?>&grupo_id=<?= $grupo['info']['grupo_id'] ?>"
-                                                class="btn btn-sm btn-primary me-2"
-                                                title="Editar Despesa">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                            <a href="scripts/excluir_despesa.php?id=<?= $variavel['id'] ?>&grupo_id=<?= $grupo['info']['grupo_id'] ?>"
-                                                class="btn btn-sm btn-danger"
-                                                title="Excluir Despesa"
-                                                onclick="return confirm('Tem certeza que deseja excluir esta despesa?')">
-                                                <i class="fas fa-trash"></i>
-                                            </a>
-                                        </td>
+                                        <th>Descrição</th>
+                                        <th>Valor</th>
+                                        <th>Pagador</th>
+                                        <th>Venc.</th>
+                                        <th>Ações</th>
                                     </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($grupo['variaveis'] as $variavel): ?>
+                                        <tr>
+                                            <td><?= htmlspecialchars($variavel['titulo']) ?></td>
+                                            <td>R$ <?= number_format($variavel['valor_total'], 2) ?></td>
+                                            <td><?= htmlspecialchars($variavel['pagador']) ?></td>
+                                            <td><?= date('d/m', strtotime($variavel['data_vencimento'])) ?></td>
+                                            <td>
+                                                <a href="editar_despesa.php?id=<?= $variavel['id'] ?>&grupo_id=<?= $grupo['info']['grupo_id'] ?>"
+                                                    class="btn btn-sm btn-primary btn-action me-1"
+                                                    title="Editar Despesa">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <a href="scripts/excluir_despesa.php?id=<?= $variavel['id'] ?>&grupo_id=<?= $grupo['info']['grupo_id'] ?>"
+                                                    class="btn btn-sm btn-danger btn-action"
+                                                    title="Excluir Despesa"
+                                                    onclick="return confirm('Tem certeza que deseja excluir esta despesa?')">
+                                                    <i class="fas fa-trash"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
