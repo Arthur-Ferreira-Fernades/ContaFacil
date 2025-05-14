@@ -50,28 +50,8 @@ try {
     $result_pagamentos = $conexao->query($sql_pagamentos);
     $pagamentos = $result_pagamentos->fetch_all(MYSQLI_ASSOC);
 
-    // 3. Consulta para despesas variáveis do grupo
-    $sql_variadas = "
-SELECT 
-    d.data_registro AS data,
-    DATE_FORMAT(d.data_vencimento, '%Y-%m-01') AS mes_referencia,
-    d.valor_total,
-    d.titulo,
-    g.nome_grupo,
-    u.nome_completo AS pagador_nome 
-FROM despesas d
-JOIN grupos g ON d.grupo_id = g.id
-JOIN usuarios u ON d.pagador_id = u.id 
-WHERE d.tipo = 'variavel' AND d.grupo_id IN ($grupo_ids_str)
-";
-    $result_variadas = $conexao->query($sql_variadas);
-    $variadas = $result_variadas->fetch_all(MYSQLI_ASSOC);
-
-    // Junta os dois arrays
-    $historico = array_merge($pagamentos, $variadas);
-
     // Ordena por data decrescente
-    usort($historico, fn($a, $b) => strtotime($b['data']) - strtotime($a['data']));
+    usort($pagamentos, fn($a, $b) => strtotime($b['data']) - strtotime($a['data']));
 } catch (Exception $e) {
     die("Erro: " . $e->getMessage());
 }
@@ -86,6 +66,7 @@ WHERE d.tipo = 'variavel' AND d.grupo_id IN ($grupo_ids_str)
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="img/contafacilLogo.jpeg">
     <title>Histórico de Pagamentos - ContaFácil</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -141,7 +122,7 @@ WHERE d.tipo = 'variavel' AND d.grupo_id IN ($grupo_ids_str)
                             </tr>
                         </thead>
                         <tbody>
-                            <?php foreach ($historico as $registro): ?>
+                            <?php foreach ($pagamentos as $registro): ?>
                                 <tr>
                                     <td><?= date('d/m/Y', strtotime($registro['data'])) ?></td>
                                     <td><?= date('m/Y', strtotime($registro['mes_referencia'])) ?></td>
@@ -157,7 +138,7 @@ WHERE d.tipo = 'variavel' AND d.grupo_id IN ($grupo_ids_str)
                             <?php endforeach; ?>
 
 
-                            <?php if (empty($historico)): ?>
+                            <?php if (empty($pagamentos)): ?>
                                 <tr>
                                     <td colspan="5" class="text-center">Nenhum registro encontrado.</td>
                                 </tr>
